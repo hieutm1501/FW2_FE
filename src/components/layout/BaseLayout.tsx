@@ -1,4 +1,4 @@
-import { PhoneOutlined } from '@ant-design/icons'
+import { PhoneOutlined, SolutionOutlined } from '@ant-design/icons'
 import { Link, Outlet } from 'react-router-dom'
 
 const BaseLayout = () => {
@@ -69,14 +69,11 @@ const BaseLayout = () => {
                                     </span>
 
                                     <span className="border-e border-e-gray-100">
-                                        <a href="/account"
-                                            className="grid h-16 w-16 place-content-center border-b-4 border-transparent hover:border-red-700">
-                                            <Link to={'tel:0858879636'}>
-                                                <a href="tel:0858879636">{<PhoneOutlined />}</a>
+                                        <Link to={'/bill'} className="grid h-16 w-16 place-content-center border-b-4 border-transparent hover:border-red-700">
+                                            <Link to={'/bill'}>
+                                                <a>{<SolutionOutlined />}</a>
                                             </Link>
-
-                                            <span className="sr-only"> Phone </span>
-                                        </a>
+                                        </Link>
                                     </span>
                                 </div>
                             </div>

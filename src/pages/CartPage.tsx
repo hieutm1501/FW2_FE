@@ -1,11 +1,13 @@
-import { InputNumber, Button, message, Popconfirm } from 'antd';
-import { useEffect } from "react"
+import { InputNumber, Button, message, Popconfirm, notification } from 'antd';
+import { useEffect, useState } from "react"
 import { DeleteOutlined } from '@ant-design/icons';
 import Cookies from "js-cookie";
 import { useSelector, useDispatch } from 'react-redux'
 import { RootState } from '../redux/store'
-import { fetchCartProduct } from '../redux/cartSlice';
+import { fetchCartProduct, fetchdeleteCart } from '../redux/cartSlice';
 import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { fetchCkeckOutBill } from '../redux/billSlice';
 
 
 
@@ -34,15 +36,73 @@ const CartPage = () => {
     const onChange = (value: number) => {
         console.log(value);
     };
-
+    // CALL API ALL CART USER
     const cartUser = useSelector((state: RootState) => state.cart.entities)
     const dispatch = useDispatch()
     useEffect(() => {
         dispatch(fetchCartProduct())
     }, [])
+    console.log("cart", cartUser?.cart?.products);
     const dataCartUser = cartUser?.cart?.products
+    // TÍNH TỔNG TIỀN
+    const [totalPrices, settotalprice] = useState(0);
 
-    console.log("cart", cartUser);
+    const calculateTotalPrice = (dataCartUser: any) => {
+        let resal = 0;
+        if (Array.isArray(dataCartUser)) {
+            for (let sum of dataCartUser) {
+                const sumall = sum?.quantity * sum?.productId?.price;
+                resal += sumall;
+            }
+            console.log("Total priceeeee: ", resal);
+            settotalprice(resal);
+        } else {
+            console.error("dataCartUser is not an array");
+        }
+    };
+
+    useEffect(() => {
+        calculateTotalPrice(dataCartUser);
+    });
+
+
+    // console.log("Total price: ", totalPrice);
+    const deleteProductCart = async (productId: any) => {
+        try {
+            await dispatch(fetchdeleteCart(productId));
+            await dispatch(fetchCartProduct());
+            message.success('Product deleted successfully');
+        } catch (error) {
+            message.error(`Failed to delete product: ${error}`);
+        }
+    }
+
+    // THANH TOÁN VỚI USER
+
+    const { register, handleSubmit } = useForm({});
+    const onsubmitbill = (data: any) => {
+        try {
+            if (data.name == "" || data.phone == "" || data.location == "") {
+                message.warning("Bạn phải Nhập đầy đủ các Trường !!");
+                return;
+            }
+            if (data.totalprice == 0) {
+                message.warning("Giá trị tổng tiền phải lớn hơn 0");
+                return;
+            }
+
+            console.log(data);
+
+            dispatch(fetchCkeckOutBill(data))
+            message.success("Thanh Toán Thanh Công !!")
+            console.log(data);
+
+        } catch ({ response }: any) {
+            notification.error({
+                message: response.data.message,
+            });
+        }
+    }
 
     return (
         <div className='bg-gray-100  pt-[50px]'>
@@ -58,10 +118,8 @@ const CartPage = () => {
                             <h3 className="font-semibold text-center text-gray-600 text-xs uppercase w-1/5 text-center">Quantity</h3>
                         </div>
                         {/* SẢN PHẨM */}
-                        {dataCartUser?.map((item) => (
-
-
-                            <div className="flex items-center hover:bg-gray-100 -mx-8 px-6 py-5">
+                        {dataCartUser?.map((item: any) => (
+                            <div key={item._id} className="flex items-center hover:bg-gray-100 -mx-8 px-6 py-5">
                                 <div className="flex w-2/5">
                                     <div className="w-20">
                                         <img className="h-24" src={`${item?.productId?.image}`} alt="" />
@@ -81,7 +139,7 @@ const CartPage = () => {
                                             <Popconfirm
                                                 title="Delete the task"
                                                 description="Are you sure to delete this task?"
-                                                onConfirm={confirm}
+                                                onConfirm={() => deleteProductCart(item?.productId?._id)}
                                                 onCancel={cancel}
                                                 okText="Yes"
                                                 cancelText="No"
@@ -104,33 +162,64 @@ const CartPage = () => {
                         </a>
                     </div>
 
-                    <div id="summary" className="w-1/4 px-8 py-10">
+                    <div id="summary" className="w-full px-8 py-10">
                         <h1 className="font-semibold text-2xl border-b pb-8">Order Summary</h1>
-                        <div className="flex justify-between mt-10 mb-5">
-                            <span className="font-semibold text-sm uppercase">Total</span>
-                            <span className="font-semibold text-sm">590$</span>
-                        </div>
-                        <div>
-                            <label className="font-medium inline-block mb-3 text-sm uppercase">Shipping</label>
-                            <select className="block p-2 text-gray-600 w-full text-sm">
-                                <option>$100</option>
-                            </select>
-                        </div>
-                        <div className="py-10">
-                            <label htmlFor="promo" className="font-semibold inline-block mb-3 text-sm uppercase">Promo Code</label>
-                            <input type="text" id="promo" placeholder="Enter your code" className="p-2 text-sm w-full" />
-                        </div>
-                        <button className="bg-red-500 hover:bg-red-600 px-5 py-2 text-sm text-white uppercase">Apply</button>
-                        <div className="border-t mt-8">
-                            <div className="flex font-semibold justify-between py-6 text-sm uppercase">
-                                <span>Total cost</span>
-                                <span>$600</span>
+                        <div className='flex w-full justify-between'>
+                            <div className="flex justify-between mt-10 mb-5">
+                                <span className="font-semibold text-sm uppercase">Total :</span>
+                                <span className="font-semibold text-sm">{totalPrices}$</span>
                             </div>
-                            <button className="bg-indigo-500 font-semibold hover:bg-indigo-600 py-3 text-sm text-white uppercase w-full">Checkout</button>
+                            <div className='flex items-center'>
+                                <label className="font-medium inline-block mb-3 text-sm uppercase">Shipping</label>
+                                <select className="block p-2 text-gray-600 w-full text-sm">
+                                    <option>$100</option>
+                                </select>
+                            </div>
                         </div>
+                        <form onSubmit={handleSubmit(onsubmitbill)}>
+                            {dataCartUser?.map((cart: any) => (
+                                <input type="text"{...register("CartId")} defaultValue={cart?._id} className='hidden' />
+                            ))}
+
+                            <div className='flex justify-between gap-[20px] w-full'>
+                                <div className="py-10 w-full">
+                                    <label htmlFor="promo" className="font-semibold inline-block mb-3 text-sm uppercase">Name:</label>
+                                    <input type="text" {...register("name")} placeholder="Name" className="p-2 text-sm w-full" />
+                                </div>
+                                <div className="py-10 w-full">
+                                    <label htmlFor="promo" className="font-semibold inline-block mb-3 text-sm uppercase">Địa chỉ:</label>
+                                    <input type="text" {...register("location")} placeholder="Địa chỉ" className="p-2 text-sm w-full" />
+                                </div>
+                            </div>
+                            <div className='flex justify-between gap-[20px] w-full'>
+                                <div className="py-10 w-full">
+                                    <label htmlFor="promo" className="font-semibold inline-block mb-3 text-sm uppercase">SĐT:</label>
+                                    <input type="text" {...register("phone")} placeholder="Phone" className="p-2 text-sm w-full" />
+                                </div>
+                                <div className="py-10 w-full">
+                                    <label htmlFor="promo" className="font-semibold inline-block mb-3 text-sm uppercase">Thanh Toán:</label>
+                                    <select className="block p-2 text-gray-600 w-full text-sm">
+                                        <option>Thanh Toán Khi Nhận Hàng</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="border-t mt-8">
+                                <div className="flex font-semibold justify-between py-6 text-sm uppercase">
+                                    <span>Total cost</span>
+                                    <input type="text" {...register("totalprice")} value={totalPrices + 100} className='' />
+                                    <span>${totalPrices + 100}</span>
+                                </div>
+                                <button className="bg-indigo-500 font-semibold hover:bg-indigo-600 py-3 text-sm text-white uppercase w-full">Checkout</button>
+                            </div>
+                        </form>
                     </div>
 
                 </div>
+            </div>
+            {/* Bill cart */}
+            <div>
+
             </div>
 
         </div>

@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { useDispatch } from 'react-redux';
 import { fetchAddToCart } from '../redux/cartSlice';
 import { message } from 'antd';
+import Cookies from "js-cookie";
 
 
 
@@ -22,10 +23,15 @@ const ProductDetaliPage = () => {
     }, [products._id, setValue]);
 
     // REDUX CALL
+    const accessToken = Cookies.get("accessToken");
     const dispatch = useDispatch()
     const onSubmit = async (data: any) => {
         try {
             console.log(data);
+            if (!accessToken) {
+                message.warning("Bạn phải Đăng Nhập !!")
+                return
+            }
             dispatch(fetchAddToCart(data));
 
             // Hiển thị thông báo loading

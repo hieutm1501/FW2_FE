@@ -9,7 +9,7 @@ const AllProductPage = () => {
     const dispatch = useDispatch();
     const products = useSelector((state: RootState) => state.product.entities);
     const category = useSelector((state: RootState) => state.category.entities);
-    const [selectedCategory, setSelectedCategory] = useState(null); // Lọc sản phẩm
+    const [selectedCategory, setSelectedCategory] = useState(null); // lưu id cate
     const [searchQuery, setSearchQuery] = useState('');
 
     const filteredProducts = products?.products?.filter(

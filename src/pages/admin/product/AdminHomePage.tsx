@@ -33,7 +33,6 @@ const AdminHomePage = () => {
             await dispatch(fetchdeleteProduct(productId))
             await dispatch(fetchProductsAll())
             message.success('Product deleted successfully');
-
         } catch (error) {
             if (!error) {
                 setTimeout(message.loading('đang sử lí ..'), 2000)

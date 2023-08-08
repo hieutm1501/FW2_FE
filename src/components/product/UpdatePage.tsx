@@ -11,7 +11,7 @@ import { fetchCategoryAll } from "../../redux/categorySlice";
 const UpdatePage = () => {
     const dispatch = useDispatch()
     const product = useSelector((state: RootState) => state.product.entities)
-    const dataproduct = product?.product
+    const dataproduct = product?.products
     const category = useSelector((state: RootState) => state.category.entities)
     const dataCategory = category?.categories
     useEffect(() => {
@@ -31,6 +31,8 @@ const UpdatePage = () => {
         const currentProduct = dataproduct?.find((item: any) => item._id == id)
         reset(currentProduct)
     }, [])
+
+
 
     const onHandleSubmit = (data: any) => {
         if (data.image == "" || data.name == "" || data.price == "") {
